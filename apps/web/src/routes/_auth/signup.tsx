@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
-import { Logo, AuthLayout, Button, Checkbox, CheckboxField, Field, Heading, Input, Label, Select, Strong, Text, TextLink, ErrorMessage } from "@/web/components";
+import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle, AuthLayout, Button, Checkbox, CheckboxField, Field, Heading, Input, Label, Logo, Select, Strong, Text, TextLink, ErrorMessage } from "@/web/components";
 import { signUp } from "@/web/lib/auth-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -26,6 +27,7 @@ const schema = z.object({
 function SignUp() {
   const { redirect } = Route.useSearch();
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -49,7 +51,7 @@ function SignUp() {
     });
 
     if (res.error) {
-      alert(res.error.message || "Authentication failed");
+      setError(res.error.message || "Authentication failed");
     }
     else {
       navigate({ to: redirect ?? "/" });
@@ -58,6 +60,15 @@ function SignUp() {
 
   return (
     <AuthLayout>
+      <Alert open={Boolean(error)} onClose={() => setError(null)}>
+        <AlertTitle>Error</AlertTitle>
+        <AlertBody>
+          <AlertDescription>{error}</AlertDescription>
+          <AlertActions>
+            <Button onClick={() => setError(null)}>OK</Button>
+          </AlertActions>
+        </AlertBody>
+      </Alert>
       <form onSubmit={handleSubmit(onSubmit)} className="grid w-full max-w-sm grid-cols-1 gap-8">
         <Logo className="h-16 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
         <Heading>Create your account</Heading>

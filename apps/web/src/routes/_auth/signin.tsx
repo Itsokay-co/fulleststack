@@ -3,9 +3,10 @@ import type { SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { z } from "zod";
 
-import { AuthLayout, Button, Checkbox, CheckboxField, ErrorMessage, Field, Heading, Input, Label, Logo, Strong, Text, TextLink } from "@/web/components";
+import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle, AuthLayout, Button, Checkbox, CheckboxField, ErrorMessage, Field, Heading, Input, Label, Logo, Strong, Text, TextLink } from "@/web/components";
 import { signIn } from "@/web/lib/auth-client";
 
 export const Route = createFileRoute("/_auth/signin")({
@@ -23,6 +24,7 @@ const schema = z.object({
 function SignIn() {
   const { redirect } = Route.useSearch();
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -44,7 +46,7 @@ function SignIn() {
     });
 
     if (res.error) {
-      alert(res.error.message || "Authentication failed");
+      setError(res.error.message || "Authentication failed");
     }
     else {
       navigate({ to: redirect ?? "/" });
@@ -52,6 +54,15 @@ function SignIn() {
   };
   return (
     <AuthLayout>
+      <Alert open={Boolean(error)} onClose={() => setError(null)}>
+        <AlertTitle>Error</AlertTitle>
+        <AlertBody>
+          <AlertDescription>{error}</AlertDescription>
+          <AlertActions>
+            <Button onClick={() => setError(null)}>OK</Button>
+          </AlertActions>
+        </AlertBody>
+      </Alert>
       <form onSubmit={handleSubmit(onSubmit)} className="grid w-full max-w-sm grid-cols-1 gap-8">
         <Logo className="h-16 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
         <Heading>Sign in to your account</Heading>
