@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
-import { Logo, AuthLayout, Button, Checkbox, CheckboxField, Field, Heading, Input, Label, Select, Strong, Text, TextLink, ErrorMessage } from "@/web/components";
+import { Alert, Logo, AuthLayout, Button, Checkbox, CheckboxField, Field, Heading, Input, Label, Select, Strong, Text, TextLink, ErrorMessage } from "@/web/components";
 import { signUp } from "@/web/lib/auth-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -24,6 +25,7 @@ const schema = z.object({
 });
 
 function SignUp() {
+  const [hasError, setHasError] = useState(false);
   const { redirect } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -42,6 +44,7 @@ function SignUp() {
   });
 
   const onSubmit: SubmitHandler<z.infer<typeof schema>> = async (data) => {
+    setHasError(false);
     const res = await signUp.email({
       email: data.email,
       password: data.password,
@@ -49,7 +52,7 @@ function SignUp() {
     });
 
     if (res.error) {
-      alert(res.error.message || "Authentication failed");
+      setHasError(true);
     }
     else {
       navigate({ to: redirect ?? "/" });
@@ -61,6 +64,9 @@ function SignUp() {
       <form onSubmit={handleSubmit(onSubmit)} className="grid w-full max-w-sm grid-cols-1 gap-8">
         <Logo className="h-16 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
         <Heading>Create your account</Heading>
+        {hasError && (
+          <Alert variant="error" title="An error has occurred" description="Authentication failed. Please try again." />
+        )}
         <Field>
           <Label>Email</Label>
           <Input {...register("email")} type="email" required autoComplete="email" />
