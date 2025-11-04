@@ -1,7 +1,7 @@
 import type { SubmitHandler } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,6 +27,7 @@ const schema = z.object({
 
 function ResetPassword() {
   const { token, error } = Route.useSearch();
+  const navigate = useNavigate();
   const [tokenExpired, setTokenExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const {
@@ -50,6 +51,9 @@ function ResetPassword() {
 
     if (res.error) {
       setTokenExpired(true);
+    }
+    else {
+      navigate({ to: "/" });
     }
     setIsLoading(false);
   };
