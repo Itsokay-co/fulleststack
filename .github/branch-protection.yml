@@ -1,0 +1,20 @@
+name: Branch Protection Settings
+
+# This is a GitHub repository settings file that can be imported via GitHub CLI:
+# gh repo edit --repo [owner]/[repo] --branch-protection-rule 'main:@.github/branch-protection.yml'
+
+branches:
+  - name: main
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - lint
+          - typecheck
+          - build
+          - test
+      enforce_admins: true
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+      restrictions: null

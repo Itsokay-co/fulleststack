@@ -1,4 +1,4 @@
-const colors = require('tailwindcss/colors')
+const colors = require("tailwindcss/colors");
 
 module.exports = {
   theme: {
@@ -17,5 +17,5 @@ module.exports = {
     // fontFamily: {
     //   sans: ['Graphik', 'sans-serif'],
     // }
-  }
-}
+  },
+};

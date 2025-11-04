@@ -26,6 +26,13 @@ function RouteComponent() {
         </div>
         <div>
           <h4 className="text-lg font-bold">{data.name}</h4>
+          {data.dueDate && (
+            <p className="mt-1 font-semibold text-gray-700">
+              Due:
+              {" "}
+              {dateFormatter.format(data.dueDate)}
+            </p>
+          )}
           <p className="mt-1">
             Updated:
             {" "}

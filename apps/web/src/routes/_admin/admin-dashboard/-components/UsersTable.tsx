@@ -5,7 +5,10 @@ import { useMemo } from "react";
 import { Avatar, Badge, Pagination, PaginationGap, PaginationList, PaginationNext, PaginationPage, PaginationPrevious, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/web/components";
 import { generatePaginationItems } from "@/web/lib/pagination";
 
-export function UsersTable({ users, page, totalPages, usersPerPage }: { users: UserWithRole[]; page: number; totalPages: number; usersPerPage: number }) {
+export function UsersTable(
+  { users, page, totalPages, usersPerPage }:
+  { users: UserWithRole[]; page: number; totalPages: number; usersPerPage: number },
+) {
   const paginationItems = useMemo(() => generatePaginationItems({ currentPage: page, totalPages }), [page, totalPages]);
   return (
     <>

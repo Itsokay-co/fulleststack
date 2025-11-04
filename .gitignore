@@ -134,3 +134,6 @@ dist
 
 # turbo
 .turbo
+
+# mcp
+.playwright-mcp

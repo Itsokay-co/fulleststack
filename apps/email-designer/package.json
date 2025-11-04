@@ -1,0 +1,13 @@
+{
+  "name": "@fulleststack/email-designer",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter email dev:email-designer"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "turso": "^0.1.0"
+  }
+}

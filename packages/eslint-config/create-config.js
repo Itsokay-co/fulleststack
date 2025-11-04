@@ -25,6 +25,16 @@ export default function createConfig(options, ...userConfigs) {
         case: "kebabCase",
         ignore: ["README.md"],
       }],
+      "import-x/order": ["off"],
+      "sort-imports": ["off"],
+      "max-len": ["error", {
+        code: 120,
+        ignoreUrls: true,
+        ignoreStrings: true,
+        ignoreTemplateLiterals: true,
+        ignoreRegExpLiterals: true,
+        ignoreComments: true,
+      }],
     },
   }, ...userConfigs);
 }

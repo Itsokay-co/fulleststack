@@ -1,0 +1,184 @@
+---
+description: "Frontend development guidelines for React web app using TanStack Router, TanStack Query, and Tailwind CSS v4"
+globs:
+alwaysApply: false
+---
+
+# Frontend Development Guidelines
+
+The web frontend is built with **React 19**, **TanStack Router** for file-based routing, and **TanStack Query** for server state management.
+
+## Core Technologies
+
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite with React plugin
+- **Routing**: TanStack Router (file-based routing)
+- **State Management**: TanStack Query for server state
+- **Styling**: Tailwind CSS v4 with @tailwindcss/vite
+- **Forms**: React Hook Form with @hookform/resolvers
+- **Validation**: Zod with shared schemas from API
+- **UI Components**: HeadlessUI + Heroicons
+- **Animation**: Framer Motion
+- **Utils**: clsx + tailwind-merge (via @fulleststack/ui)
+
+## Architecture Patterns
+
+### App Setup
+
+The main app follows TanStack Router patterns with authentication context:
+
+```typescript
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: {
+      user: null,
+      session: null,
+      isPending: false,
+      isLoggedIn: false,
+      isAdmin: false,
+    },
+  },
+});
+
+// Always include type registration for router
+declare module "@tanstack/react-router" {
+  type Register = {
+    router: typeof router;
+  };
+}
+```
+
+### File-Based Routing Structure
+
+Routes follow TanStack Router file conventions:
+
+```
+src/routes/
+├── __root.tsx          # Root layout component
+├── index.tsx           # Home page (/)
+├── _authenticated/     # Authenticated route group
+│   ├── _layout.tsx     # Layout for authenticated routes
+│   └── dashboard.tsx   # Dashboard page (/dashboard)
+├── _auth/              # Auth route group
+│   ├── login.tsx       # Login page (/login)
+│   └── register.tsx    # Register page (/register)
+└── task/
+    ├── $taskId.tsx     # Dynamic route (/task/:taskId)
+    └── _layout.tsx     # Task section layout
+```
+
+### Component Organization
+
+Components are organized by feature and type:
+
+```
+src/components/
+├── ui/                 # Reusable UI components
+├── overlays/           # Modals, dialogs, dropdowns
+└── feature-name/       # Feature-specific components
+```
+
+## Best Practices
+
+### Routing & Navigation
+
+- Use file-based routing with TanStack Router conventions
+- Implement route groups with `_` prefix for layouts
+- Use `$` prefix for dynamic route parameters
+- Always include proper TypeScript types for route params
+- Use `useNavigate` hook for programmatic navigation
+- Implement route guards with authentication context
+
+### Data Fetching
+
+- Use TanStack Query for all server state management
+- Create custom query hooks in `src/hooks/` or `src/lib/queries/`
+- Use the shared API client from `@fulleststack/api-client`
+- Implement proper loading and error states
+- Use query invalidation for cache management
+
+```typescript
+// Example query hook
+function useTasksQuery() {
+  return useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => apiClient.tasks.list(),
+  });
+}
+```
+
+### Forms & Validation
+
+- Use React Hook Form with Zod resolvers
+- Share validation schemas between frontend and API
+- Implement proper form error handling
+- Use controlled components for form inputs
+
+```typescript
+const form = useForm<InsertTaskSchema>({
+  resolver: zodResolver(insertTaskSchema),
+  defaultValues: { name: "", done: false },
+});
+```
+
+### Styling with Tailwind CSS
+
+- Use Tailwind CSS v4 with `@tailwindcss/vite` plugin
+- Use the `cn()` utility from `@fulleststack/ui` for class merging
+- Follow responsive-first design patterns
+- Use semantic color tokens when available
+- Prefer utility classes over custom CSS
+
+```typescript
+import { cn } from "@fulleststack/ui";
+
+const Button = ({ className, ...props }) => (
+  <button
+    className={cn(
+      "px-4 py-2 rounded-md bg-blue-600 text-white",
+      "hover:bg-blue-700 focus:outline-none focus:ring-2",
+      className
+    )}
+    {...props}
+  />
+);
+```
+
+### Component Patterns
+
+- Use function components with TypeScript interfaces
+- Export components as default exports
+- Use proper prop drilling or context for shared state
+- Implement loading skeletons for better UX
+- Use HeadlessUI for complex interactive components
+
+### Animation
+
+- Use Framer Motion for smooth animations
+- Implement enter/exit animations for route transitions
+- Use layout animations for dynamic content
+- Keep animations subtle and performant
+
+### Authentication Integration
+
+- Use the shared authentication context
+- Implement route protection with auth guards
+- Handle authentication state across the app
+- Use better-auth client for auth operations
+
+### Error Handling
+
+- Implement error boundaries for graceful error handling
+- Use proper error states in queries and mutations
+- Provide meaningful error messages to users
+- Log errors appropriately for debugging
+
+### Development & Testing
+
+- Use Vite for fast development and HMR
+- Implement component testing with Vitest
+- Use React DevTools and TanStack Router DevTools
+- Follow the shared ESLint configuration
+
+Reference files: [apps/web/src/main.tsx](mdc:apps/web/src/main.tsx), [apps/web/src/app.tsx](mdc:apps/web/src/app.tsx), [apps/web/package.json](mdc:apps/web/package.json)

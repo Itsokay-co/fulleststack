@@ -1,0 +1,114 @@
+---
+description: "API development guidelines for Hono on Cloudflare Workers, including routing, middleware, and OpenAPI patterns"
+globs:
+alwaysApply: false
+---
+
+# API Development Guidelines
+
+The API is built with **Hono** framework deployed on **Cloudflare Workers**, following a structured middleware and routing pattern.
+
+## Core Technologies
+
+- **Framework**: Hono with OpenAPI support (@hono/zod-openapi)
+- **Runtime**: Cloudflare Workers
+- **Validation**: Zod schemas with drizzle-zod integration
+- **Documentation**: Scalar API documentation
+- **Logging**: Pino logger with hono-pino middleware
+- **Testing**: Vitest with @cloudflare/vitest-pool-workers
+
+## Architecture Patterns
+
+### App Creation Pattern
+
+The main app follows a dependency injection middleware pattern:
+
+```typescript
+// Middleware order is critical - dependencies must be attached first
+const app = createRouter()
+  .use(validateAndAttachEnv) // Environment validation (first)
+  .use(requestId()) // Request ID before logging
+  .use(pinoLogger()) // Logging early
+  .use(cors({ origin: trustedOrigins }))
+  .use(csrf({ origin: trustedOrigins }))
+  .use(attachDb) // Database connection
+  .use(attachEmailer) // Email service
+  .use(attachAuthEntities); // Auth (depends on db + emailer)
+```
+
+### Route Organization
+
+Routes are organized by feature with clear separation:
+
+```
+src/routes/
+├── index.ts           # Route registration
+├── index.route.ts     # Root route handlers
+└── tasks/
+    ├── tasks.index.ts    # Task route exports
+    ├── tasks.routes.ts   # Route definitions with OpenAPI
+    └── tasks.handlers.ts # Route handler implementations
+```
+
+### OpenAPI Integration
+
+All routes must include OpenAPI specifications:
+
+```typescript
+export const list = createRoute({
+  method: "get",
+  path: "/tasks",
+  tags: ["tasks"],
+  summary: "Get all tasks",
+  responses: {
+    [HttpStatusCodes.OK]: {
+      content: { "application/json": { schema: z.array(selectTasksSchema) } },
+      description: "List of tasks",
+    },
+  },
+});
+```
+
+## Best Practices
+
+### Route Handlers
+
+- Use typed route handlers: `AppRouteHandler<RouteType>`
+- Extract context dependencies at start: `const db = c.get("db")`
+- Use proper HTTP status codes from `stoker/http-status-codes`
+- Always validate input with Zod schemas
+
+### Error Handling
+
+- Use `stoker/middlewares` for consistent error responses
+- Implement proper error boundaries in route handlers
+- Return appropriate HTTP status codes and messages
+
+### Type Safety
+
+- Export router type for API client generation
+- Use Zod schemas for all request/response validation
+- Leverage drizzle-zod for database schema validation
+
+### Environment Variables
+
+- Validate all environment variables with Zod in `env.ts`
+- Use the `validateAndAttachEnv` middleware for type safety
+- Never access `process.env` directly in handlers
+
+### Development & Deployment
+
+- Use `wrangler dev` for local development
+- Configure local database in `.dev.vars`
+- Deploy with `wrangler deploy --minify`
+- Use `cross-env ENVIRONMENT=test` for testing
+
+## Testing Patterns
+
+```typescript
+// Use createTestApp for isolated route testing
+const testApp = createTestApp(router);
+const response = await testApp.request("/api/endpoint");
+```
+
+Reference files: [apps/api/src/app.ts](mdc:apps/api/src/app.ts), [apps/api/src/lib/create-app.ts](mdc:apps/api/src/lib/create-app.ts), [apps/api/src/routes/index.ts](mdc:apps/api/src/routes/index.ts)

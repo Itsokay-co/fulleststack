@@ -1,6 +1,9 @@
 ENVIRONMENT=development
 LOG_LEVEL=debug
 
+API_URL=http://localhost:8787
+WEB_URL=http://localhost:5173
+
 # BetterAuth
 BETTER_AUTH_URL=http://localhost:8787 # Base URL of your app
 BETTER_AUTH_SECRET=your_jwt_secret_here_at_least_32_chars_long

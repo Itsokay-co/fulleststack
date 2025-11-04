@@ -1,0 +1,271 @@
+---
+description: "Guidelines for working with shared workspace packages including api-client, common utilities, UI components, and email templates"
+globs:
+alwaysApply: false
+---
+
+# Shared Package Guidelines
+
+The monorepo includes several shared packages that provide common functionality across applications. These packages ensure code reuse and maintain consistency.
+
+## Package Overview
+
+### @fulleststack/api-client
+
+- **Purpose**: Type-safe API client generated from Hono routes
+- **Used by**: Web app, mobile app
+- **Technologies**: Hono RPC client, TypeScript
+
+### @fulleststack/common
+
+- **Purpose**: Shared utilities and helper functions
+- **Used by**: All applications and packages
+- **Technologies**: Lodash-es, TypeScript
+
+### @fulleststack/ui
+
+- **Purpose**: Shared UI utilities and style functions
+- **Used by**: Web app, mobile app
+- **Technologies**: clsx, tailwind-merge
+
+### @fulleststack/email
+
+- **Purpose**: Email templates and email service
+- **Used by**: API for sending emails
+- **Technologies**: React Email, TypeScript
+
+### @fulleststack/eslint-config
+
+- **Purpose**: Shared ESLint configuration
+- **Used by**: All packages and applications
+- **Technologies**: @antfu/eslint-config
+
+## Package Architecture Patterns
+
+### API Client Pattern
+
+The API client provides type-safe access to the backend API:
+
+```typescript
+import type { router } from "@fulleststack/api/routes";
+
+// Auto-generated from Hono routes
+import { hc } from "hono/client";
+
+const client = hc<typeof router>("/api");
+
+// Type-safe API calls
+const response = await client.tasks.$get();
+const tasks = await response.json(); // Fully typed response
+```
+
+### Common Utilities Pattern
+
+Shared utilities follow functional programming patterns:
+
+```typescript
+// utils/validation.ts
+export function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(email);
+}
+
+// utils/arrays.ts
+export function notNullable<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
+export * from "./arrays";
+// Export from index.ts
+export * from "./validation";
+```
+
+### UI Utilities Pattern
+
+UI package provides styling utilities for cross-platform consistency:
+
+```typescript
+// utils.ts
+import type { ClassValue } from "clsx";
+
+// Usage across web and mobile
+import { cn } from "@fulleststack/ui";
+import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+const className = cn(
+  "base-classes",
+  condition && "conditional-classes",
+  props.className
+);
+```
+
+### Email Templates Pattern
+
+Email templates use React Email for consistent styling:
+
+```typescript
+// templates/WelcomeEmail.tsx
+interface WelcomeEmailProps {
+  name: string;
+  loginUrl: string;
+}
+
+export default function WelcomeEmail({ name, loginUrl }: WelcomeEmailProps) {
+  return (
+    <Html>
+      <Head />
+      <Body>
+        <Container>
+          <Text>Welcome {name}!</Text>
+          <Button href={loginUrl}>Login to your account</Button>
+        </Container>
+      </Body>
+    </Html>
+  );
+}
+```
+
+## Development Patterns
+
+### Package Structure
+
+Each package follows a consistent structure:
+
+```
+packages/package-name/
+├── src/
+│   ├── index.ts          # Main export file
+│   ├── types.ts          # Type definitions
+│   └── utils/            # Utility functions
+├── package.json          # Package configuration
+├── tsconfig.json         # TypeScript configuration
+└── README.md             # Package documentation
+```
+
+### Export Patterns
+
+Use barrel exports for clean package interfaces:
+
+```typescript
+export { default as SpecificExport } from "./specific";
+// src/index.ts
+export * from "./types";
+export * from "./utils";
+
+// Named exports for specific functionality
+export {
+  type ClassValue,
+  cn,
+} from "./utils";
+```
+
+### TypeScript Configuration
+
+Packages extend from the root tsconfig with package-specific settings:
+
+```json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
+}
+```
+
+### Build Configuration
+
+Packages use TypeScript compiler for building:
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  }
+}
+```
+
+## Best Practices
+
+### Package Dependencies
+
+- Keep package dependencies minimal and focused
+- Use workspace dependencies with `workspace:^` for stable packages
+- Use `workspace:*` for frequently updated packages
+- Avoid circular dependencies between packages
+
+### Versioning Strategy
+
+- Use semantic versioning for package updates
+- Update workspace references when making breaking changes
+- Use syncpack to maintain version consistency
+- Document breaking changes in package README
+
+### Type Safety
+
+- Export comprehensive TypeScript types
+- Use branded types for domain-specific values
+- Provide utility types for common patterns
+- Ensure cross-package type compatibility
+
+### Testing Strategy
+
+```typescript
+// package-name/src/__tests__/utils.test.ts
+import { describe, expect, it } from "vitest";
+
+import { utilityFunction } from "../utils";
+
+describe("utilityFunction", () => {
+  it("should work as expected", () => {
+    const result = utilityFunction(input);
+    expect(result).toBe(expectedOutput);
+  });
+});
+```
+
+### Documentation
+
+- Maintain comprehensive README for each package
+- Document public APIs with JSDoc comments
+- Provide usage examples in documentation
+- Keep changelog for significant updates
+
+### Performance Considerations
+
+- Use tree-shaking friendly exports
+- Avoid side effects in package imports
+- Lazy load heavy dependencies when possible
+- Profile package bundle size impact
+
+### API Client Best Practices
+
+- Generate client types from API routes automatically
+- Handle authentication consistently across platforms
+- Implement proper error handling for network requests
+- Use environment-specific base URLs
+
+### Email Template Best Practices
+
+- Use semantic HTML structure
+- Test templates across email clients
+- Implement fallbacks for unsupported features
+- Use inline styles for maximum compatibility
+
+### Shared UI Best Practices
+
+- Keep components platform-agnostic when possible
+- Use consistent naming conventions
+- Provide TypeScript interfaces for props
+- Document component usage patterns
+
+Reference files: [packages/ui/src/utils.ts](mdc:packages/ui/src/utils.ts), [packages/common/package.json](mdc:packages/common/package.json), [packages/api-client/package.json](mdc:packages/api-client/package.json)

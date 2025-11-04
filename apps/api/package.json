@@ -17,10 +17,11 @@
     "db:generate": "drizzle-kit generate",
     "generate-auth-schema": "npx @better-auth/cli@latest generate --config ./src/lib/better-auth.config.ts --output ./src/db/auth.schema.ts -y",
     "deploy": "wrangler deploy --minify",
-    "lint:fix": "npm run lint --fix",
     "test": "cross-env ENVIRONMENT=test vitest"
   },
   "dependencies": {
+    "@fulleststack/common": "workspace:^",
+    "@fulleststack/email": "workspace:^",
     "@hono/zod-openapi": "0.19.6",
     "@libsql/client": "0.15.4",
     "@scalar/hono-api-reference": "0.8.5",
@@ -28,10 +29,9 @@
     "drizzle-orm": "0.43.1",
     "drizzle-zod": "0.7.1",
     "hono": "workspace:*",
-    "hono-pino": "^0.8.0",
+    "hono-pino": "^0.10.2",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
-    "resend": "^4.5.1",
     "stoker": "^1.4.2",
     "zod": "workspace:*"
   },
@@ -41,7 +41,7 @@
     "@fulleststack/eslint-config": "workspace:^",
     "@types/node": "workspace:*",
     "cross-env": "^7.0.3",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.1",
     "drizzle-kit": "0.31.0",
     "eslint": "workspace:*",
     "eslint-plugin-drizzle": "^0.2.3",
@@ -50,6 +50,6 @@
     "tsx": "^4.19.2",
     "typescript": "workspace:*",
     "vitest": "3.1.2",
-    "wrangler": "^4.12.0"
+    "wrangler": "^4.31.0"
   }
 }

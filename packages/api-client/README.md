@@ -4,7 +4,9 @@ A type-safe API client for communicating with the Fulleststack API.
 
 ## What is it?
 
-This package provides a typed client wrapper for making requests to the Fulleststack API. It imports the router definition from `@fulleststack/api/routes` and uses Hono's client utilities (`hc`) to generate a fully type-safe client.
+This package provides a typed client wrapper for making requests to the Fulleststack API.
+It imports the router definition from `@fulleststack/api/routes` and uses
+Hono's client utilities (`hc`) to generate a fully type-safe client.
 
 ## How it works
 
@@ -14,7 +16,8 @@ The client leverages Hono's client generator with TypeScript to:
 2. Create a type-safe client factory using Hono's `hc` utility
 3. Export the client and its types for use in other packages
 
-This approach ensures that all API endpoints, request parameters, and response types are fully typed, providing autocompletion and type-checking during development.
+This approach ensures that all API endpoints, request parameters, and response types are fully typed,
+providing autocompletion and type-checking during development.
 
 ## Usage
 
@@ -79,6 +82,7 @@ if ("success" in json && !json.success) {
 ```
 
 The client preserves all type information from the API routes, providing autocompletion for:
+
 - API endpoints
 - Request methods
 - Request parameters

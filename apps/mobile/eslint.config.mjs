@@ -5,10 +5,7 @@ export default createConfig({
 }, {
   rules: {
     "ts/no-require-imports": "off",
-    "unicorn/filename-case": ["error", {
-      cases: ["kebabCase", "pascalCase"],
-      ignore: ["README.md", "__root.tsx"],
-    }],
+    "unicorn/filename-case": "off",
     "ts/no-use-before-define": "off",
     "node/no-process-env": "off",
   },

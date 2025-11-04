@@ -92,9 +92,11 @@ export function PaginationPage({
   );
 }
 
+const DefaultGap = <>&hellip;</>;
+
 export function PaginationGap({
   className,
-  children = <>&hellip;</>,
+  children = DefaultGap,
   ...props
 }: React.ComponentProps<"span">) {
   return (

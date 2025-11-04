@@ -1,0 +1,259 @@
+---
+description: "Authentication patterns using better-auth library across API, web, and mobile applications with role-based access control"
+globs:
+alwaysApply: false
+---
+
+# Authentication Patterns
+
+Authentication is handled by **better-auth** library with consistent implementation across API, web, and mobile applications, featuring role-based access control.
+
+## Core Technologies
+
+- **Library**: better-auth with Drizzle adapter
+- **Database**: Automatic schema generation via better-auth CLI
+- **Plugins**: admin, access control, expo, openAPI
+- **Web Integration**: better-auth client with React hooks
+- **Mobile Integration**: @better-auth/expo for native flows
+- **Authorization**: Role-based access control with statements
+
+## Architecture Overview
+
+### API Configuration
+
+The better-auth server is configured in the API with comprehensive plugins:
+
+```typescript
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "sqlite",
+    schema: { users, sessions, accounts, verifications },
+  }),
+
+  emailAndPassword: { enabled: true },
+
+  plugins: [
+    admin<typeof statements>({
+      impersonationSessionDuration: 60 * 60 * 24, // 24 hours
+    }),
+    createAccessControl(statements),
+    expo(),
+    openAPI(),
+  ],
+
+  trustedOrigins,
+
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // Cache for 5 minutes
+    },
+  },
+});
+```
+
+### Permission System
+
+Define comprehensive permission statements for access control:
+
+```typescript
+export const statements = {
+  ...defaultStatements, // Built-in admin statements
+  task: ["create", "update", "delete"],
+  project: ["create", "update", "delete", "manage"],
+  user: ["read", "update", "delete"],
+} as const;
+
+// Role definitions with permissions
+export type Role = "admin" | "user" | "moderator";
+```
+
+### Schema Management
+
+Authentication schemas are auto-generated and should not be manually edited:
+
+```bash
+# Regenerate auth schema when updating better-auth
+pnpm --filter api generate-auth-schema
+```
+
+## Implementation Patterns
+
+### API Authentication Middleware
+
+Attach authentication entities to the Hono context:
+
+```typescript
+export async function attachAuthEntities(c: Context, next: Next) {
+  const auth = c.get("auth");
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+  c.set("user", session?.user || null);
+  c.set("session", session?.session || null);
+
+  return next();
+}
+```
+
+### Route Protection in API
+
+Use role-based protection for API endpoints:
+
+```typescript
+export const protectedHandler: AppRouteHandler<ProtectedRoute> = async (c) => {
+  const user = c.get("user");
+
+  if (!user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  // Check specific permissions
+  if (!hasRole(user, "admin")) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  // Handler logic...
+};
+
+// Utility function for role checking
+export function hasRole(user: User, requiredRole: Role): boolean {
+  return user.role === requiredRole || user.role === "admin";
+}
+```
+
+### Web Client Integration
+
+Set up better-auth client in the web application:
+
+```typescript
+// hooks/useAuth.ts
+import { createAuthClient } from "better-auth/react";
+
+const authClient = createAuthClient({
+  baseURL: import.meta.env.VITE_API_URL,
+});
+
+export function useAuth() {
+  const { data: session, isPending } = authClient.useSession();
+
+  return {
+    user: session?.user || null,
+    session: session?.session || null,
+    isPending,
+    isLoggedIn: !!session?.user,
+    isAdmin: session?.user?.role === "admin",
+    signIn: authClient.signIn.email,
+    signOut: authClient.signOut,
+  };
+}
+```
+
+### Mobile Client Integration
+
+Use @better-auth/expo for native authentication flows:
+
+```typescript
+// hooks/useAuth.ts (mobile)
+import { createAuthClient } from "@better-auth/expo";
+
+const authClient = createAuthClient({
+  baseURL: process.env.EXPO_PUBLIC_API_URL,
+});
+
+export function useAuth() {
+  const { data: session, isPending } = authClient.useSession();
+
+  return {
+    user: session?.user || null,
+    session: session?.session || null,
+    isPending,
+    isLoggedIn: !!session?.user,
+    isAdmin: session?.user?.role === "admin",
+    signIn: authClient.signIn.email,
+    signOut: authClient.signOut,
+  };
+}
+```
+
+### Route Protection Patterns
+
+#### Web App Route Guards
+
+Use TanStack Router context for authentication:
+
+```typescript
+// _authenticated/_layout.tsx
+import { createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_authenticated")({
+  beforeLoad: ({ context }) => {
+    if (!context.auth.isLoggedIn) {
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: AuthenticatedLayout,
+});
+```
+
+#### Mobile App Route Guards
+
+Use Expo Router layouts for protection:
+
+```typescript
+// (protected)/_layout.tsx
+export default function ProtectedLayout() {
+  const { isLoggedIn, isPending } = useAuth();
+
+  if (isPending) return <LoadingScreen />;
+  if (!isLoggedIn) return <Redirect href="/auth/login" />;
+
+  return <Slot />;
+}
+```
+
+## Best Practices
+
+### Security Guidelines
+
+- Always validate authentication on both client and server
+- Use proper CORS configuration with trusted origins
+- Implement CSRF protection for state-changing operations
+- Store sensitive data securely (expo-secure-store for mobile)
+- Use proper session management with appropriate timeouts
+
+### Role-Based Access Control
+
+- Define clear permission statements for all features
+- Implement hierarchical role system (admin > moderator > user)
+- Check permissions at both route and component levels
+- Use consistent role checking utilities across the codebase
+
+### Session Management
+
+- Configure appropriate session durations
+- Implement session caching for performance
+- Handle session expiration gracefully
+- Support session impersonation for admin users
+
+### Error Handling
+
+- Provide clear error messages for authentication failures
+- Implement proper redirect flows for unauthorized access
+- Handle network errors in authentication flows
+- Log authentication events for security monitoring
+
+### Development & Testing
+
+- Use separate auth configurations for development and production
+- Test authentication flows across all platforms
+- Implement proper mocking for authentication in tests
+- Use better-auth DevTools for debugging
+
+### Database Considerations
+
+- Never manually edit auth schema files
+- Regenerate auth schema when updating better-auth
+- Use proper foreign key relationships with cascade deletes
+- Implement proper indexing for auth-related queries
+
+Reference files: [apps/api/src/lib/auth.ts](mdc:apps/api/src/lib/auth.ts), [apps/api/src/middlewares/auth.ts](mdc:apps/api/src/middlewares/auth.ts), [apps/api/src/db/auth.schema.ts](mdc:apps/api/src/db/auth.schema.ts)

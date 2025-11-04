@@ -1,8 +1,5 @@
 import {
   ArrowRightStartOnRectangleIcon,
-  Cog8ToothIcon,
-  LightBulbIcon,
-  ShieldCheckIcon,
   UserIcon,
 } from "@heroicons/react/16/solid";
 import { useLocation } from "@tanstack/react-router";

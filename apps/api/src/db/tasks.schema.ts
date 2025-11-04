@@ -1,8 +1,9 @@
 /* eslint-disable ts/no-redeclare */
-import type { z } from "zod";
-
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
+
+import { users } from "./auth.schema";
 
 export const tasks = sqliteTable("tasks", {
   id: integer({ mode: "number" })
@@ -12,6 +13,10 @@ export const tasks = sqliteTable("tasks", {
   done: integer({ mode: "boolean" })
     .notNull()
     .default(false),
+  dueDate: integer({ mode: "timestamp" }),
+  createdBy: text()
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
   createdAt: integer({ mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -27,11 +32,13 @@ export const insertTasksSchema = createInsertSchema(
   tasks,
   {
     name: schema => schema.min(1).max(500),
+    dueDate: () => z.coerce.date().nullable().optional(),
   },
 ).required({
   done: true,
 }).omit({
   id: true,
+  createdBy: true,
   createdAt: true,
   updatedAt: true,
 });

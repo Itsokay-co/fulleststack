@@ -1,0 +1,192 @@
+---
+description: "Overview of all Cursor rules and quick reference guide for the fullstack monorepo project structure and patterns"
+globs:
+alwaysApply: false
+---
+
+# Cursor Rules Overview
+
+This document provides an overview of all Cursor rules for the fullstack monorepo and serves as a quick reference guide.
+
+## Rule Index
+
+1. **[01-monorepo-architecture.md]** - Monorepo structure, workspace setup, and core technologies
+2. **[02-api-development.md]** - Hono API patterns, Cloudflare Workers, and OpenAPI
+3. **[03-database-guidelines.md]** - Drizzle ORM, Turso database, and schema patterns
+4. **[04-frontend-development.md]** - React web app with TanStack Router and Query
+5. **[05-mobile-development.md]** - Expo React Native with NativeWind and authentication
+6. **[06-authentication-patterns.md]** - better-auth implementation across all platforms
+7. **[07-shared-packages.md]** - Workspace packages and shared code patterns
+8. **[08-testing-guidelines.md]** - Testing strategies across API, web, and mobile
+9. **[09-code-style-eslint.md]** - Code style, ESLint configuration, and formatting
+
+## Tech Stack Summary
+
+### Core Technologies
+
+- **Monorepo**: Turborepo + pnpm workspaces
+- **Language**: TypeScript 5.8.3 throughout
+- **Linting**: @antfu/eslint-config based
+- **Authentication**: better-auth with role-based access control
+
+### Backend (API)
+
+- **Framework**: Hono on Cloudflare Workers
+- **Database**: Drizzle ORM + Turso (libSQL)
+- **Validation**: Zod schemas with OpenAPI
+- **Testing**: Vitest with Cloudflare Workers pool
+
+### Frontend (Web)
+
+- **Framework**: React 19 + Vite
+- **Routing**: TanStack Router (file-based)
+- **State**: TanStack Query for server state
+- **Styling**: Tailwind CSS v4
+- **Forms**: React Hook Form + Zod validation
+
+### Mobile
+
+- **Framework**: Expo + React Native
+- **Routing**: Expo Router (file-based)
+- **Styling**: NativeWind (Tailwind for RN)
+- **Auth**: @better-auth/expo
+- **Testing**: Jest with jest-expo
+
+## Key Principles
+
+### Architecture Principles
+
+1. **Type Safety First** - TypeScript everywhere with strict configuration
+2. **Shared Validation** - Zod schemas shared between API and frontends
+3. **File-Based Routing** - Both web (TanStack Router) and mobile (Expo Router)
+4. **Dependency Injection** - Middleware pattern in API with proper ordering
+5. **Workspace Packages** - Shared code via @fulleststack/\* packages
+
+### Development Principles
+
+1. **Consistent Patterns** - Same patterns across all packages and apps
+2. **Error Handling** - Proper error boundaries and validation
+3. **Testing Strategy** - Unit, integration, and E2E testing
+4. **Code Style** - Enforced via ESLint and automated formatting
+5. **Performance** - Tree-shaking, lazy loading, and optimization
+
+### Security Principles
+
+1. **Authentication** - better-auth with proper session management
+2. **Authorization** - Role-based access control with permission statements
+3. **Validation** - Input validation on both client and server
+4. **CORS/CSRF** - Proper security headers and protection
+5. **Environment** - Secure environment variable handling
+
+## Quick Command Reference
+
+### Development
+
+```bash
+# Start all apps in development
+pnpm dev
+
+# Start specific app
+pnpm --filter web dev
+pnpm --filter api dev
+pnpm --filter mobile dev
+
+# Build all packages and apps
+pnpm build
+
+# Run tests across all packages
+pnpm test
+
+# Lint and fix all code
+pnpm lint:fix
+```
+
+### Database
+
+```bash
+# Apply migrations to development database
+pnpm --filter api db:push
+
+# Generate new migration
+pnpm --filter api db:generate
+
+# Regenerate auth schema (after better-auth updates)
+pnpm --filter api generate-auth-schema
+```
+
+### Package Management
+
+```bash
+# Check for version mismatches
+pnpm syncpack:check
+
+# Fix version mismatches
+pnpm syncpack:fix
+
+# Add dependency to specific package
+pnpm --filter web add react-query
+
+# Add workspace dependency
+pnpm --filter web add @fulleststack/ui
+```
+
+## File Naming Conventions
+
+### General Rules
+
+- **Directories**: kebab-case (`user-management/`)
+- **Files**: kebab-case (`user-service.ts`)
+- **Components**: PascalCase (`UserProfile.tsx`)
+- **Types**: PascalCase (`UserProfile.types.ts`)
+
+### Specific Patterns
+
+- **Database schemas**: `*.schema.ts`
+- **API routes**: `*.routes.ts`
+- **API handlers**: `*.handlers.ts`
+- **Test files**: `*.test.ts` or `*.spec.ts`
+- **Type definitions**: `*.types.ts`
+
+## Project Structure Quick Reference
+
+```
+fulleststack/
+├── apps/
+│   ├── api/              # Cloudflare Workers API
+│   ├── web/              # React web application
+│   ├── mobile/           # Expo React Native app
+│   ├── db/               # Database setup and data
+│   └── email-designer/   # Email template designer
+├── packages/
+│   ├── api-client/       # Type-safe API client
+│   ├── common/           # Shared utilities
+│   ├── email/            # Email templates
+│   ├── eslint-config/    # Shared ESLint config
+│   └── ui/               # Shared UI utilities
+└── .cursor/
+    └── rules/            # This documentation
+```
+
+## When to Use Each Rule
+
+- **Starting new feature**: Review rules 1-2 for architecture, then specific platform rules
+- **API development**: Focus on rules 2, 3, 6 (API, Database, Auth)
+- **Frontend development**: Focus on rules 4, 6, 7 (Frontend, Auth, Shared packages)
+- **Mobile development**: Focus on rules 5, 6, 7 (Mobile, Auth, Shared packages)
+- **Testing**: Review rule 8 for comprehensive testing patterns
+- **Code review**: Use rule 9 for style and consistency checks
+- **Package management**: Use rule 7 for shared package patterns
+
+## Getting Help
+
+When implementing new features:
+
+1. Start with the overview (this document)
+2. Review relevant platform-specific rules
+3. Check authentication patterns if auth is involved
+4. Follow testing guidelines for comprehensive coverage
+5. Apply code style guidelines for consistency
+
+Remember: These rules are living documentation that should evolve with the project. Update them when patterns change or new best practices are adopted.
+
+Reference files: [package.json](mdc:package.json), [README.md](mdc:README.md), [turbo.json](mdc:turbo.json)

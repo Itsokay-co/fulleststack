@@ -16,7 +16,7 @@ export const tasksQueryOptions = queryOptions({
   queryFn: async () => {
     const response = await apiClient.api.tasks.$get();
     const json = await response.json();
-    return withParsedDates(json);
+    return withParsedDates(json, ["dueDate"]);
   },
 });
 
@@ -37,7 +37,7 @@ export const getTaskQueryOptions = (id: string) => queryOptions({
       const message = formatApiError(json);
       throw new Error(message);
     }
-    return withParsedDates(json);
+    return withParsedDates(json, ["dueDate"]);
   },
 });
 

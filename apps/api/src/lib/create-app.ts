@@ -3,13 +3,14 @@ import { csrf } from "hono/csrf";
 import { requestId } from "hono/request-id";
 import { notFound, onError, serveEmojiFavicon } from "stoker/middlewares";
 
-import { authMiddleware } from "@/api/middlewares/auth";
-import { dbMiddleware } from "@/api/middlewares/db";
-import { envMiddleware } from "@/api/middlewares/env";
+import { attachAuthEntities } from "@/api/middlewares/auth";
+import { attachDb } from "@/api/middlewares/db";
+import { validateAndAttachEnv } from "@/api/middlewares/env";
 import { pinoLogger } from "@/api/middlewares/logger";
 
 import type { AppOpenAPI } from "./types";
 
+import { attachEmailer } from "../middlewares/emailer";
 import { BASE_PATH, trustedOrigins } from "./constants";
 import createRouter from "./create-router";
 
@@ -26,7 +27,7 @@ export default function createApp() {
     .basePath(BASE_PATH) as AppOpenAPI;
 
   // Adding env validation as first middleware
-  app.use(envMiddleware());
+  app.use(validateAndAttachEnv);
 
   // RequestID before logger so logs can include the ID
   app.use(requestId());
@@ -51,8 +52,9 @@ export default function createApp() {
   }));
 
   app.use(serveEmojiFavicon("📝"))
-    .use(dbMiddleware())
-    .use(authMiddleware())
+    .use(attachDb)
+    .use(attachEmailer)
+    .use(attachAuthEntities) // depends on emailer and db to be attached first
     .on(["POST", "GET"], "/auth/**", (c) => {
       return c.get("auth").handler(c.req.raw);
     });

@@ -11,7 +11,7 @@ export default function TaskList({ tasks }: { tasks: selectTasksSchema[] }) {
   return (
     <div className="my-12">
       <ul role="list" className="-mb-8">
-        {tasks.map(({ id, name, done, createdAt }, taskIdx) => (
+        {tasks.map(({ id, name, done, createdAt, dueDate }, taskIdx) => (
           <li key={id}>
             <div className="relative pb-8">
               {taskIdx !== tasks.length - 1
@@ -35,6 +35,13 @@ export default function TaskList({ tasks }: { tasks: selectTasksSchema[] }) {
                     <Link to="/task/$id" params={{ id: id.toString() }} className="text-sm text-gray-900">
                       {name}
                     </Link>
+                    {dueDate && (
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        Due:
+                        {" "}
+                        <time dateTime={dueDate.toISOString()}>{dueDate.toLocaleDateString()}</time>
+                      </p>
+                    )}
                   </div>
                   <div className="whitespace-nowrap text-right text-sm text-gray-500">
                     <time dateTime={createdAt.toISOString()}>{createdAt.toLocaleString()}</time>

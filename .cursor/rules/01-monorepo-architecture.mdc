@@ -1,0 +1,66 @@
+---
+description: "Monorepo architecture overview, project structure, and key technologies used across the fullstack application"
+globs:
+alwaysApply: false
+---
+
+# Monorepo Architecture & Project Overview
+
+This is a fullstack TypeScript monorepo using **Turborepo** for build orchestration and **pnpm workspaces** for dependency management.
+
+## Core Technologies
+
+- **Build System**: Turborepo with pnpm workspaces
+- **Package Manager**: pnpm with version pinning via overrides
+- **TypeScript**: v5.8.3 with shared tsconfig
+- **ESLint**: @antfu/eslint-config based shared configuration
+
+## Project Structure
+
+```
+fulleststack/
+├── apps/
+│   ├── api/          # Cloudflare Workers backend (Hono + Drizzle)
+│   ├── web/          # React frontend (Vite + TanStack Router)
+│   ├── mobile/       # Expo React Native app
+│   ├── db/           # Local Turso database setup
+│   └── email-designer/ # Email template designer
+├── packages/
+│   ├── api-client/   # Type-safe API client
+│   ├── common/       # Shared utilities
+│   ├── email/        # Email templates and service
+│   ├── eslint-config/ # Shared ESLint configuration
+│   └── ui/           # Shared UI utilities
+└── scripts/          # Monorepo maintenance scripts
+```
+
+## Key Patterns
+
+### Workspace Package Naming
+
+- Use `@fulleststack/` scope for all packages
+- Reference workspace packages with `workspace:^` or `workspace:*`
+
+### Development Commands
+
+- `pnpm dev` - Start all apps in development mode
+- `pnpm build` - Build all packages and apps
+- `pnpm test` - Run tests across all packages
+- `pnpm lint` - Lint all packages with shared config
+
+### Package Dependencies
+
+- All React-related packages are hoisted to root level
+- Version overrides ensure consistency across workspace
+- Use `workspace:*` for packages with frequent updates (like better-auth)
+- Use `workspace:^` for stable internal packages
+
+### File Naming Conventions
+
+- Use kebab-case for directories and files
+- Use PascalCase for React components
+- Use camelCase for TypeScript files and functions
+- Suffix with `.schema.ts` for database schemas
+- Suffix with `.routes.ts` for API route definitions
+
+Reference files: [package.json](mdc:package.json), [pnpm-workspace.yaml](mdc:pnpm-workspace.yaml), [turbo.json](mdc:turbo.json)

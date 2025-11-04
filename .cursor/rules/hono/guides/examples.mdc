@@ -1,0 +1,9 @@
+---
+description: Hono examples and code samples demonstrating various use cases and implementation patterns for building web applications
+globs:
+alwaysApply: false
+---
+
+# Examples
+
+See the [Examples section](/examples/).

@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/_admin/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as TaskIdImport } from './routes/task/$id'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
+import { Route as AuthVerifyEmailImport } from './routes/_auth/verify-email'
 import { Route as AuthSignupImport } from './routes/_auth/signup'
 import { Route as AuthSigninImport } from './routes/_auth/signin'
 import { Route as AuthResetPasswordImport } from './routes/_auth/reset-password'
@@ -49,6 +50,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+
+const AuthVerifyEmailRoute = AuthVerifyEmailImport.update({
+  id: '/_auth/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const AuthSignupRoute = AuthSignupImport.update({
@@ -140,6 +147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupImport
       parentRoute: typeof rootRoute
     }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailImport
+      parentRoute: typeof rootRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -203,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof AuthResetPasswordRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/task/$id': typeof TaskIdRoute
   '/task/edit/$id': typeof TaskEditIdRoute
@@ -216,6 +231,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof AuthResetPasswordRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/task/$id': typeof TaskIdRoute
   '/task/edit/$id': typeof TaskEditIdRoute
@@ -231,6 +247,7 @@ export interface FileRoutesById {
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/task/$id': typeof TaskIdRoute
   '/task/edit/$id': typeof TaskEditIdRoute
@@ -246,6 +263,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signin'
     | '/signup'
+    | '/verify-email'
     | '/profile'
     | '/task/$id'
     | '/task/edit/$id'
@@ -258,6 +276,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signin'
     | '/signup'
+    | '/verify-email'
     | '/profile'
     | '/task/$id'
     | '/task/edit/$id'
@@ -271,6 +290,7 @@ export interface FileRouteTypes {
     | '/_auth/reset-password'
     | '/_auth/signin'
     | '/_auth/signup'
+    | '/_auth/verify-email'
     | '/_authenticated/profile'
     | '/task/$id'
     | '/task/edit/$id'
@@ -286,6 +306,7 @@ export interface RootRouteChildren {
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   TaskIdRoute: typeof TaskIdRoute
   TaskEditIdRoute: typeof TaskEditIdRoute
 }
@@ -298,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   TaskIdRoute: TaskIdRoute,
   TaskEditIdRoute: TaskEditIdRoute,
 }
@@ -319,6 +341,7 @@ export const routeTree = rootRoute
         "/_auth/reset-password",
         "/_auth/signin",
         "/_auth/signup",
+        "/_auth/verify-email",
         "/task/$id",
         "/task/edit/$id"
       ]
@@ -349,6 +372,9 @@ export const routeTree = rootRoute
     },
     "/_auth/signup": {
       "filePath": "_auth/signup.tsx"
+    },
+    "/_auth/verify-email": {
+      "filePath": "_auth/verify-email.tsx"
     },
     "/_authenticated/profile": {
       "filePath": "_authenticated/profile.tsx",

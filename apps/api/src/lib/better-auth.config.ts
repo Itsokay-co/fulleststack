@@ -3,13 +3,14 @@
  * It is never imported anywhere on a serverless setup.
  */
 
-import { config } from "dotenv";
+import { Emailer } from "@fulleststack/email";
 /* eslint-disable node/no-process-env */
+import { config } from "dotenv";
 import path from "node:path";
 
 import { createDb } from "@/api/db";
-import { configureAuth } from "@/api/lib/auth";
 import { validateEnv } from "@/api/env";
+import { configureAuth } from "@/api/lib/auth";
 
 // Load environment variables for development tools
 config({
@@ -18,5 +19,6 @@ config({
 
 const env = validateEnv(process.env);
 const db = createDb(env);
+const emailer = new Emailer(env);
 
-export const auth = configureAuth(db, env);
+export const auth = configureAuth(db, emailer, env);

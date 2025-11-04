@@ -63,6 +63,56 @@ Tour:
 
 > All pnpm commands are run from the root of the repo.
 
+## Using as a Template
+
+If you're using this repository as a template, you can sync updates from the upstream template using git remotes and cherry-pick.
+
+### One-time Setup
+
+First, add the template repository as a remote:
+
+```sh
+pnpm template:setup
+```
+
+This configures the template remote and fetches the latest commits.
+
+### List Available Updates
+
+View recent commits from the template:
+
+```sh
+pnpm template:list
+```
+
+Or see commits since a specific SHA:
+
+```sh
+pnpm template:list --since <your-last-sync-sha>
+```
+
+### Apply Updates
+
+Apply one or more commits from the template:
+
+```sh
+pnpm template:apply <commit-sha>
+```
+
+Apply multiple commits at once:
+
+```sh
+pnpm template:apply <sha1> <sha2> <sha3>
+```
+
+Example:
+
+```sh
+pnpm template:apply d3d7a0c
+```
+
+If conflicts occur, resolve them and continue with `git cherry-pick --continue`, or abort with `git cherry-pick --abort`.
+
 ## Local Setup
 
 ### Install dependencies
@@ -85,6 +135,7 @@ Update the values in the `.dev.vars` file with your Turso credentials.
 
 This command applies migrations to your local Turso database if you are using `turso dev` or a local libSQL file.
 If you are using a remote Turso dev database, configure `apps/api/drizzle.config.ts` accordingly or use the production migration command.
+
 ```sh
 pnpm --filter api db:push
 ```
@@ -104,6 +155,7 @@ All requests to `/api` will be proxied to the hono server running on [http://loc
 ### Run DB migrations on Turso
 
 This command applies migrations to your production Turso database. Ensure `apps/api/drizzle.config.ts` is configured for your production database.
+
 ```sh
 pnpm --filter api db:push
 ```

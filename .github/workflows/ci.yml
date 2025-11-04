@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: 22
+      pnpm-version: 10.10.0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.10.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check dependency versions
+        id: syncpack-check
+        continue-on-error: true
+        run: pnpm syncpack:check
+      
+
+  lint:
+    name: Lint
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          pnpm-version: ${{ needs.setup.outputs.pnpm-version }}
+
+      - name: Run linting
+        run: pnpm lint
+
+  # typecheck:
+  #   name: Type Check
+  #   needs: setup
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+      
+  #     - name: Setup environment
+  #       uses: ./.github/actions/setup
+  #       with:
+  #         node-version: ${{ needs.setup.outputs.node-version }}
+  #         pnpm-version: ${{ needs.setup.outputs.pnpm-version }}
+
+  #     - name: Run type checking
+  #       run: pnpm typecheck
+
+  build:
+    name: Build
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          pnpm-version: ${{ needs.setup.outputs.pnpm-version }}
+
+      - name: Build
+        run: pnpm build
+
+  # test:
+  #   name: Test
+  #   needs: setup
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+      
+  #     - name: Setup environment
+  #       uses: ./.github/actions/setup
+  #       with:
+  #         node-version: ${{ needs.setup.outputs.node-version }}
+  #         pnpm-version: ${{ needs.setup.outputs.pnpm-version }}
+
+  #     - name: Run tests
+  #       run: pnpm test

@@ -49,5 +49,6 @@
   "cSpell.words": [
     "Hono",
     "openapi"
-  ]
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

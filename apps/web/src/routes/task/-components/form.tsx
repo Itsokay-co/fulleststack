@@ -4,11 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { Button, ErrorMessage, Field, Label, Textarea } from "@/web/components";
+import { Alert, Button, ErrorMessage, Field, Input, Label, Textarea } from "@/web/components";
+import { useAuth } from "@/web/hooks/useAuth";
 import { createTask, queryKeys } from "@/web/lib/queries/tasks";
 
 export default function TaskForm() {
   const queryClient = useQueryClient();
+  const { isLoggedIn, user, isPending } = useAuth();
 
   const {
     register,
@@ -20,6 +22,7 @@ export default function TaskForm() {
     defaultValues: {
       name: "",
       done: false,
+      dueDate: null,
     },
     resolver: zodResolver(insertTasksSchema),
   });
@@ -40,6 +43,8 @@ export default function TaskForm() {
   return (
     <form onSubmit={handleSubmit(data => createMutation.mutate(data))}>
       <Field>
+        {!isPending && !isLoggedIn && <Alert className="mb-4" variant="warning" title="You must be logged in" description="You must be logged as an 'editor' in to create a task." />}
+        {!isPending && user && (user.role !== "editor" && user.role !== "admin") && <Alert className="mb-4" variant="warning" title="You are not an editor" description="Please contact an administrator to be granted access." />}
         <Label>Task</Label>
         <Textarea
           className="block w-full"
@@ -51,8 +56,20 @@ export default function TaskForm() {
         <ErrorMessage>{errors?.name?.message ?? <>&nbsp;</>}</ErrorMessage>
       </Field>
 
+      <Field>
+        <Label>Due Date (Optional)</Label>
+        <Input
+          type="date"
+          {...register("dueDate", {
+            setValueAs: value => value ? new Date(value) : null,
+          })}
+          disabled={createMutation.isPending}
+        />
+        <ErrorMessage>{errors?.dueDate?.message ?? <>&nbsp;</>}</ErrorMessage>
+      </Field>
+
       <div className="mt-4 flex justify-end">
-        <Button type="submit" disabled={createMutation.isPending}>Create Task</Button>
+        <Button type="submit" disabled={createMutation.isPending || !isLoggedIn}>Create Task</Button>
       </div>
 
       {createMutation.error && (

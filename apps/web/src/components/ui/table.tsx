@@ -3,7 +3,7 @@
 import type React from "react";
 
 import clsx from "clsx";
-import { createContext, use, useState } from "react";
+import { createContext, use, useMemo, useState } from "react";
 
 import { ExternalLink } from "./link";
 
@@ -23,8 +23,9 @@ export function Table({
   children,
   ...props
 }: { bleed?: boolean; dense?: boolean; grid?: boolean; striped?: boolean } & React.ComponentProps<"div">) {
+  const contextValue = useMemo(() => ({ bleed, dense, grid, striped }), [bleed, dense, grid, striped]);
   return (
-    <TableContext value={{ bleed, dense, grid, striped } as React.ContextType<typeof TableContext>}>
+    <TableContext value={contextValue}>
       <div className="flow-root">
         <div {...props} className={clsx(className, "-mx-(--gutter) overflow-x-auto whitespace-nowrap")}>
           <div className={clsx("inline-block min-w-full align-middle", !bleed && "sm:px-(--gutter)")}>
@@ -59,8 +60,9 @@ export function TableRow({
 }: { href?: string; target?: string; title?: string } & React.ComponentProps<"tr">) {
   const { striped } = use(TableContext);
 
+  const rowContextValue = useMemo(() => ({ href, target, title }), [href, target, title]);
   return (
-    <TableRowContext value={{ href, target, title } as React.ContextType<typeof TableRowContext>}>
+    <TableRowContext value={rowContextValue}>
       <tr
         {...props}
         className={clsx(

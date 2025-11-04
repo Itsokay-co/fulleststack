@@ -11,10 +11,13 @@
     "dev": "tsc --watch",
     "test": "jest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "lodash-es": "^4.17.21"
+  },
   "devDependencies": {
     "@fulleststack/eslint-config": "workspace:^",
     "@types/jest": "workspace:*",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "workspace:*",
     "jest": "workspace:*",
     "ts-jest": "workspace:*",

@@ -1,0 +1,404 @@
+---
+description: "Testing guidelines and patterns for API (Vitest + Cloudflare Workers), web (Vitest), and mobile (Jest + Expo) applications"
+globs:
+alwaysApply: false
+---
+
+# Testing Guidelines
+
+The project uses different testing frameworks optimized for each platform: **Vitest** for API and web applications, **Jest** for mobile applications.
+
+## Testing Stack Overview
+
+### API Testing
+
+- **Framework**: Vitest with @cloudflare/vitest-pool-workers
+- **Environment**: Cloudflare Workers compatible testing
+- **Database**: In-memory SQLite for isolation
+- **Mocking**: Built-in Vitest mocking capabilities
+
+### Web Testing
+
+- **Framework**: Vitest with React testing utilities
+- **Environment**: jsdom for browser simulation
+- **Mocking**: Mock Service Worker (MSW) for API mocking
+- **Coverage**: Built-in Vitest coverage reporting
+
+### Mobile Testing
+
+- **Framework**: Jest with jest-expo preset
+- **Environment**: React Native testing environment
+- **Utilities**: React Native Testing Library
+- **Mocking**: Jest mocking for native modules
+
+## Testing Patterns
+
+### API Testing Patterns
+
+Test API routes using the createTestApp pattern:
+
+```typescript
+import { createTestApp } from "@/api/lib/create-app";
+// routes/tasks/tasks.test.ts
+import { beforeEach, describe, expect, it } from "vitest";
+
+import tasksRouter from "./tasks.index";
+
+describe("Tasks API", () => {
+  const app = createTestApp(tasksRouter);
+
+  beforeEach(async () => {
+    // Reset database state
+    await clearDatabase();
+  });
+
+  it("should create a new task", async () => {
+    const taskData = { name: "Test Task", done: false };
+
+    const response = await app.request("/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(taskData),
+    });
+
+    expect(response.status).toBe(201);
+    const task = await response.json();
+    expect(task.name).toBe(taskData.name);
+  });
+
+  it("should require authentication", async () => {
+    const response = await app.request("/tasks/protected");
+    expect(response.status).toBe(401);
+  });
+});
+```
+
+### Database Testing Patterns
+
+Use isolated database instances for testing:
+
+```typescript
+import type { Db } from "@/api/db";
+
+// lib/test-db.ts
+import { createDb } from "@/api/db";
+
+export function createTestDb(): Db {
+  return createDb({
+    TURSO_URL: ":memory:", // In-memory SQLite
+    TURSO_AUTH_TOKEN: "",
+  });
+}
+
+export async function clearDatabase(db: Db) {
+  // Clear all tables in reverse dependency order
+  await db.delete(tasks);
+  await db.delete(users);
+}
+```
+
+### Authentication Testing
+
+Mock authentication for protected routes:
+
+```typescript
+// Mock authenticated user context
+const mockUser = {
+  id: "test-user-id",
+  email: "test@example.com",
+  role: "user",
+};
+
+it("should allow authenticated access", async () => {
+  const app = createTestApp(router);
+
+  // Mock authentication middleware
+  app.use("*", (c, next) => {
+    c.set("user", mockUser);
+    return next();
+  });
+
+  const response = await app.request("/protected-route");
+  expect(response.status).toBe(200);
+});
+```
+
+### Web Component Testing
+
+Test React components with Vitest and Testing Library:
+
+```typescript
+// components/Button.test.tsx
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import Button from './Button';
+
+describe('Button Component', () => {
+  it('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  });
+
+  it('calls onClick handler when clicked', () => {
+    const handleClick = vi.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledOnce();
+  });
+
+  it('applies custom className', () => {
+    render(<Button className="custom-class">Button</Button>);
+    expect(screen.getByRole('button')).toHaveClass('custom-class');
+  });
+});
+```
+
+### Query Hook Testing
+
+Test TanStack Query hooks with proper providers:
+
+```typescript
+// hooks/useTasksQuery.test.tsx
+import { describe, it, expect } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useTasksQuery } from './useTasksQuery';
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+}
+
+describe('useTasksQuery', () => {
+  it('fetches tasks successfully', async () => {
+    const { result } = renderHook(() => useTasksQuery(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data).toBeDefined();
+  });
+});
+```
+
+### Mobile Component Testing
+
+Test React Native components with Jest:
+
+```typescript
+// components/Button.test.tsx (mobile)
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react-native';
+import Button from './Button';
+
+describe('Button Component', () => {
+  it('renders correctly', () => {
+    const { getByText } = render(<Button title="Test Button" onPress={() => {}} />);
+    expect(getByText('Test Button')).toBeTruthy();
+  });
+
+  it('calls onPress when pressed', () => {
+    const onPressMock = jest.fn();
+    const { getByText } = render(<Button title="Test" onPress={onPressMock} />);
+
+    fireEvent.press(getByText('Test'));
+    expect(onPressMock).toHaveBeenCalled();
+  });
+
+  it('applies correct styles', () => {
+    const { getByTestId } = render(
+      <Button title="Test" onPress={() => {}} testID="test-button" />
+    );
+
+    const button = getByTestId('test-button');
+    expect(button).toHaveStyle({ /* expected styles */ });
+  });
+});
+```
+
+## Best Practices
+
+### Test Organization
+
+- Group related tests in describe blocks
+- Use descriptive test names that explain behavior
+- Follow Arrange-Act-Assert pattern
+- Keep tests focused on single functionality
+
+### Test Data Management
+
+```typescript
+// test/fixtures/taskFixtures.ts
+export function createTaskFixture(overrides = {}) {
+  return {
+    id: 1,
+    name: "Test Task",
+    done: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function createUserFixture(overrides = {}) {
+  return {
+    id: "user-1",
+    email: "test@example.com",
+    name: "Test User",
+    role: "user",
+    ...overrides,
+  };
+}
+```
+
+### Mocking Strategies
+
+#### API Mocking for Frontend
+
+```typescript
+// test/mocks/handlers.ts
+import { http, HttpResponse } from "msw";
+
+export const handlers = [
+  http.get("/api/tasks", () => {
+    return HttpResponse.json([
+      { id: 1, name: "Task 1", done: false },
+      { id: 2, name: "Task 2", done: true },
+    ]);
+  }),
+
+  http.post("/api/tasks", async ({ request }) => {
+    const task = await request.json();
+    return HttpResponse.json({ id: 3, ...task }, { status: 201 });
+  }),
+];
+```
+
+#### Database Mocking for API
+
+```typescript
+// Use in-memory database for isolation
+const testEnv = {
+  TURSO_URL: ":memory:",
+  TURSO_AUTH_TOKEN: "",
+};
+
+// Or mock database operations
+vi.mock("@/api/db", () => ({
+  createDb: vi.fn(() => mockDb),
+}));
+```
+
+### Test Configuration
+
+#### Vitest Configuration (API/Web)
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: "node", // 'jsdom' for web components
+    setupFiles: ["./test/setup.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: ["node_modules/", "test/"],
+    },
+  },
+});
+```
+
+#### Jest Configuration (Mobile)
+
+```javascript
+// jest.config.js
+module.exports = {
+  preset: "jest-expo",
+  setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
+  transformIgnorePatterns: [
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)",
+  ],
+  collectCoverageFrom: [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "!**/*.d.ts",
+  ],
+};
+```
+
+### Test Environment Setup
+
+```typescript
+// test/setup.ts
+import { vi } from "vitest";
+
+// Mock environment variables
+vi.mock("process", () => ({
+  env: {
+    NODE_ENV: "test",
+    TURSO_URL: ":memory:",
+    TURSO_AUTH_TOKEN: "",
+  },
+}));
+
+// Global test utilities
+global.testUtils = {
+  createMockUser: () => ({ id: "1", email: "test@example.com" }),
+  createMockTask: () => ({ id: 1, name: "Test Task", done: false }),
+};
+```
+
+### Integration Testing
+
+```typescript
+// Full API integration test
+describe("Tasks Integration", () => {
+  it("should handle complete task lifecycle", async () => {
+    const app = createTestApp(router);
+
+    // Create task
+    const createResponse = await app.request("/tasks", {
+      method: "POST",
+      body: JSON.stringify({ name: "Integration Test Task" }),
+    });
+    const task = await createResponse.json();
+
+    // Update task
+    const updateResponse = await app.request(`/tasks/${task.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ done: true }),
+    });
+    expect(updateResponse.status).toBe(200);
+
+    // Delete task
+    const deleteResponse = await app.request(`/tasks/${task.id}`, {
+      method: "DELETE",
+    });
+    expect(deleteResponse.status).toBe(204);
+  });
+});
+```
+
+### Coverage and Quality
+
+- Aim for 80%+ test coverage on critical paths
+- Test edge cases and error conditions
+- Include integration tests for key workflows
+- Use snapshot testing sparingly for UI components
+- Mock external dependencies consistently
+
+Reference files: [apps/api/package.json](mdc:apps/api/package.json), [apps/web/package.json](mdc:apps/web/package.json), [apps/mobile/package.json](mdc:apps/mobile/package.json)

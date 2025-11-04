@@ -4,7 +4,8 @@ import { jsonContent, jsonContentRequired } from "stoker/openapi/helpers";
 import { createErrorSchema, IdParamsSchema } from "stoker/openapi/schemas";
 
 import { insertTasksSchema, patchTasksSchema, selectTasksSchema } from "@/api/db/schema";
-import { notFoundSchema } from "@/api/lib/constants";
+import { forbidden, notFoundSchema, unauthorized } from "@/api/lib/constants";
+import { isAuthorizedTo, isLoggedIn } from "@/api/middlewares/auth";
 
 const tags = ["Tasks"];
 
@@ -23,6 +24,7 @@ export const list = createRoute({
 export const create = createRoute({
   path: "/tasks",
   method: "post",
+  middleware: isAuthorizedTo({ task: ["create"] }),
   request: {
     body: jsonContentRequired(
       insertTasksSchema,
@@ -39,12 +41,16 @@ export const create = createRoute({
       createErrorSchema(insertTasksSchema),
       "The validation error(s)",
     ),
+    ...unauthorized,
+    ...forbidden,
   },
 });
 
 export const getOne = createRoute({
   path: "/tasks/{id}",
   method: "get",
+  description: "Get self created task by id",
+  middleware: [isLoggedIn],
   request: {
     params: IdParamsSchema,
   },
@@ -62,12 +68,14 @@ export const getOne = createRoute({
       createErrorSchema(IdParamsSchema),
       "Invalid id error",
     ),
+    ...unauthorized,
   },
 });
 
 export const patch = createRoute({
   path: "/tasks/{id}",
   method: "patch",
+  middleware: [isAuthorizedTo({ task: ["update"] })],
   request: {
     params: IdParamsSchema,
     body: jsonContentRequired(
@@ -90,12 +98,15 @@ export const patch = createRoute({
         .or(createErrorSchema(IdParamsSchema)),
       "The validation error(s)",
     ),
+    ...unauthorized,
+    ...forbidden,
   },
 });
 
 export const remove = createRoute({
   path: "/tasks/{id}",
   method: "delete",
+  middleware: [isAuthorizedTo({ task: ["delete"] })],
   request: {
     params: IdParamsSchema,
   },
@@ -112,6 +123,8 @@ export const remove = createRoute({
       createErrorSchema(IdParamsSchema),
       "Invalid id error",
     ),
+    ...unauthorized,
+    ...forbidden,
   },
 });
 

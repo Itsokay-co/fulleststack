@@ -1,0 +1,430 @@
+---
+description: "Code style guidelines, ESLint configuration patterns, and consistent formatting rules across the fullstack monorepo"
+globs:
+alwaysApply: false
+---
+
+# Code Style & ESLint Guidelines
+
+The project uses **@antfu/eslint-config** as the foundation for consistent code style across all packages and applications, with additional rules for specific technologies.
+
+## ESLint Configuration
+
+### Base Configuration
+
+The shared ESLint config extends @antfu/eslint-config with custom overrides:
+
+```typescript
+// packages/eslint-config/eslint.config.js
+import antfu from "@antfu/eslint-config";
+
+export default antfu({
+  // TypeScript support
+  typescript: true,
+
+  // React support for web and mobile
+  react: true,
+
+  // Node.js support for API
+  node: true,
+
+  // Disable some opinionated rules
+  rules: {
+    "no-console": "warn",
+    "prefer-const": "error",
+    "@typescript-eslint/consistent-type-imports": "error",
+  },
+});
+```
+
+### Package-Specific Configurations
+
+Each package extends the base config with specific rules:
+
+#### API Configuration
+
+```typescript
+// apps/api/eslint.config.mjs
+import createConfig from "@fulleststack/eslint-config/create-config";
+import drizzle from "eslint-plugin-drizzle";
+
+export default createConfig({
+  ignores: ["src/db/migrations/*", "public/*"],
+  plugins: { drizzle },
+  rules: {
+    ...drizzle.configs.recommended.rules,
+    "node/prefer-global/process": "off", // Allow process.env in Cloudflare Workers
+    "unicorn/prefer-node-protocol": "off", // Node protocol not needed in Workers
+  },
+});
+```
+
+#### Web Configuration
+
+```typescript
+// apps/web/eslint.config.mjs
+import createConfig from "@fulleststack/eslint-config/create-config";
+import tanstackQuery from "@tanstack/eslint-plugin-query";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+
+export default createConfig({
+  plugins: {
+    "react-hooks": reactHooks,
+    "react-refresh": reactRefresh,
+    "@tanstack/query": tanstackQuery,
+  },
+  rules: {
+    ...reactHooks.configs.recommended.rules,
+    "react-refresh/only-export-components": "warn",
+    "@tanstack/query/exhaustive-deps": "error",
+  },
+});
+```
+
+#### Mobile Configuration
+
+```typescript
+// apps/mobile/eslint.config.mjs
+import createConfig from "@fulleststack/eslint-config/create-config";
+
+export default createConfig({
+  env: {
+    "react-native/react-native": true,
+  },
+  plugins: ["react-native"],
+  rules: {
+    "react-native/no-unused-styles": "error",
+    "react-native/split-platform-components": "error",
+    "react-native/no-inline-styles": "warn",
+  },
+});
+```
+
+## Code Style Guidelines
+
+### TypeScript Style
+
+- Use `type` for object shapes, `interface` for extensible definitions
+- Prefer explicit return types for exported functions
+- Use strict TypeScript configuration with `noUncheckedIndexedAccess`
+- Import types with `import type` syntax
+
+```typescript
+// Preferred type definitions
+// Type-only imports
+import type { User } from "@/types/user";
+
+import { validateUser } from "@/utils/validation";
+
+export type TaskStatus = "pending" | "completed" | "cancelled";
+
+export type CreateTaskRequest = {
+  name: string;
+  description?: string;
+  status: TaskStatus;
+};
+
+// Function with explicit return type
+export function createTask(data: CreateTaskRequest): Promise<Task> {
+  return apiClient.tasks.create(data);
+}
+```
+
+### Import Organization
+
+Follow consistent import ordering and grouping:
+
+```typescript
+// 4. Relative imports (deepest first)
+import type { AppRouteHandler } from "@/api/lib/types";
+
+import { createDb } from "@/api/db";
+// 3. Internal workspace packages
+import { notNullable } from "@fulleststack/common";
+import { cn } from "@fulleststack/ui";
+import { createRoute } from "@hono/zod-openapi";
+import fs from "node:fs";
+// 1. Node.js built-ins
+import path from "node:path";
+// 2. External packages
+import { z } from "zod";
+
+import { validateEnv } from "../env";
+import { TaskService } from "./TaskService";
+```
+
+### Function and Variable Naming
+
+- Use camelCase for functions and variables
+- Use PascalCase for classes and components
+- Use SCREAMING_SNAKE_CASE for constants
+- Use descriptive names that explain intent
+
+```typescript
+// Functions and variables
+const userEmail = "user@example.com";
+const isValidEmail = (email: string) => /\S[^\s@]*@\S+\.\S+/.test(email);
+
+// Classes and components
+class UserService {}
+function UserProfile() {}
+
+// Constants
+const MAX_RETRY_ATTEMPTS = 3;
+const API_BASE_URL = "https://api.example.com";
+
+// Descriptive naming
+function fetchUserTasks() {} // Better than fetchData()
+const isTaskCompleted = (task: Task) => task.status === "completed";
+```
+
+### Error Handling Patterns
+
+Use consistent error handling across the codebase:
+
+```typescript
+// API error handling
+export const taskHandler: AppRouteHandler<TaskRoute> = async (c) => {
+  try {
+    const task = await taskService.create(data);
+    return c.json(task, 201);
+  }
+  catch (error) {
+    if (error instanceof ValidationError) {
+      return c.json({ error: error.message }, 400);
+    }
+
+    // Log unexpected errors
+    console.error("Unexpected error in taskHandler:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+};
+
+// Frontend error handling
+const { data, error, isLoading } = useQuery({
+  queryKey: ["tasks"],
+  queryFn: fetchTasks,
+  onError: (error) => {
+    console.error("Failed to fetch tasks:", error);
+    toast.error("Failed to load tasks");
+  },
+});
+```
+
+### Async/Await Patterns
+
+Prefer async/await over Promise chains:
+
+```typescript
+// Preferred
+async function createUserTask(userId: string, taskData: CreateTaskData) {
+  const user = await userService.findById(userId);
+  const task = await taskService.create({ ...taskData, userId: user.id });
+  await notificationService.sendTaskCreated(user.email, task);
+  return task;
+}
+
+// Avoid
+function createUserTask(userId: string, taskData: CreateTaskData) {
+  return userService.findById(userId)
+    .then(user => taskService.create({ ...taskData, userId: user.id }))
+    .then((task) => {
+      return notificationService.sendTaskCreated(user.email, task)
+        .then(() => task);
+    });
+}
+```
+
+## React/JSX Patterns
+
+### Component Structure
+
+Follow consistent component organization:
+
+```typescript
+// Component props interface first
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
+}
+
+// Component implementation
+export default function Button({
+  children,
+  onClick,
+  variant = 'primary',
+  disabled = false
+}: ButtonProps) {
+  // Hooks at the top
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Event handlers
+  const handleClick = async () => {
+    if (disabled || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await onClick?.();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Render
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={disabled || isLoading}
+      className={cn(
+        'px-4 py-2 rounded-md font-medium',
+        variant === 'primary' ? 'bg-blue-600 text-white' : 'bg-gray-200',
+        disabled && 'opacity-50 cursor-not-allowed'
+      )}
+    >
+      {isLoading ? 'Loading...' : children}
+    </button>
+  );
+}
+```
+
+### Hook Patterns
+
+Create custom hooks for reusable logic:
+
+```typescript
+// Custom hook for form state
+function useForm<T>(initialValues: T, validationSchema: z.ZodSchema<T>) {
+  const [values, setValues] = useState<T>(initialValues);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = useCallback(() => {
+    const result = validationSchema.safeParse(values);
+    if (!result.success) {
+      const newErrors = result.error.flatten().fieldErrors;
+      setErrors(newErrors);
+      return false;
+    }
+    setErrors({});
+    return true;
+  }, [values, validationSchema]);
+
+  return { values, setValues, errors, validate };
+}
+```
+
+## Database and API Patterns
+
+### Consistent Validation
+
+Use Zod schemas consistently across API boundaries:
+
+```typescript
+// Shared schema definition
+const createTaskSchema = z.object({
+  name: z.string().min(1).max(500),
+  description: z.string().optional(),
+  priority: z.enum(["low", "medium", "high"]).default("medium"),
+});
+
+// Use in API handler
+export const createTaskHandler: AppRouteHandler<CreateTaskRoute> = async (c) => {
+  const data = createTaskSchema.parse(await c.req.json());
+  const task = await taskService.create(data);
+  return c.json(task, 201);
+};
+
+// Use in frontend form
+const form = useForm({
+  resolver: zodResolver(createTaskSchema),
+  defaultValues: { name: "", priority: "medium" },
+});
+```
+
+### Database Query Patterns
+
+Follow consistent patterns for database operations:
+
+```typescript
+// Repository pattern for complex queries
+class TaskRepository {
+  constructor(private db: Db) {}
+
+  async findUserTasks(userId: string, filters?: TaskFilters) {
+    let query = this.db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.createdBy, userId));
+
+    if (filters?.status) {
+      query = query.where(eq(tasks.status, filters.status));
+    }
+
+    return query
+      .orderBy(desc(tasks.createdAt))
+      .limit(filters?.limit ?? 50);
+  }
+}
+```
+
+## Development Tools
+
+### VS Code Configuration
+
+Recommended workspace settings:
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "eslint.workingDirectories": ["apps/*", "packages/*"],
+  "tailwindCSS.experimental.configFile": "./tailwind.config.js"
+}
+```
+
+### Git Hooks
+
+Use lint-staged for pre-commit hooks:
+
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": ["eslint --fix", "git add"],
+    "*.{json,md}": ["prettier --write", "git add"]
+  }
+}
+```
+
+## Performance Considerations
+
+### Bundle Size Optimization
+
+- Use tree-shaking friendly imports
+- Avoid importing entire libraries when only specific functions are needed
+- Use dynamic imports for heavy components
+
+```typescript
+// Avoid - imports entire library
+import _ from "lodash";
+// Preferred - tree-shakable
+import { debounce } from "lodash-es";
+
+// Dynamic imports for heavy components
+const HeavyChart = lazy(() => import("./HeavyChart"));
+```
+
+### Memory Management
+
+- Clean up event listeners and subscriptions
+- Use React.memo for expensive component renders
+- Implement proper dependency arrays in useEffect
+
+Reference files: [packages/eslint-config/package.json](mdc:packages/eslint-config/package.json), [apps/api/eslint.config.mjs](mdc:apps/api/eslint.config.mjs), [eslint.config.mjs](mdc:eslint.config.mjs)

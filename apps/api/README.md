@@ -69,9 +69,11 @@ pnpm test
 
 Base hono app exported from [app.ts](./src/app.ts). Local development uses [@hono/node-server](https://hono.dev/docs/getting-started/nodejs) defined in [index.ts](./src/index.ts) - update this file or create a new entry point to use your preferred runtime.
 
-Typesafe env defined in [env.ts](./src/env.ts) - add any other required environment variables here. The application will not start if any required environment variables are missing
+Typesafe env defined in [env.ts](./src/env.ts) - add any other required environment variables here.
+The application will not start if any required environment variables are missing
 
-See [src/routes/tasks](./src/routes/tasks/) for an example Open API group. Copy this folder / use as an example for your route groups.
+See [src/routes/tasks](./src/routes/tasks/) for an example Open API group.
+Copy this folder / use as an example for your route groups.
 
 - Router created in [tasks.index.ts](./src/routes/tasks/tasks.index.ts)
 - Route definitions defined in [tasks.routes.ts](./src/routes/tasks/tasks.routes.ts)

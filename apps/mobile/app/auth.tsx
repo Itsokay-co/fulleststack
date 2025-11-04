@@ -1,6 +1,4 @@
-import { authClient } from "@/lib/auth-client";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
@@ -8,14 +6,16 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  SafeAreaView,
 } from "react-native";
+
+import { authClient } from "@/lib/auth-client";
 
 type AuthMode = "login" | "signup";
 
@@ -51,7 +51,6 @@ export default function AuthScreen() {
       {
         onError: (ctx) => {
           Alert.alert("Error", ctx.error.message);
-          console.log(ctx);
         },
         onSuccess: () => {},
       },
@@ -80,7 +79,6 @@ export default function AuthScreen() {
       {
         onError: (ctx) => {
           Alert.alert("Error", ctx.error.message);
-          console.log(ctx);
         },
         onSuccess: () => {},
       },
@@ -220,7 +218,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     gap: 24,
-    paddingTop: Platform.OS === 'ios' ? 0 : 24,
+    paddingTop: Platform.OS === "ios" ? 0 : 24,
   },
   headerContainer: {
     alignItems: "center",

@@ -1,0 +1,29 @@
+{
+  "name": "@fulleststack/email",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "build": "tsc",
+    "lint": "eslint .",
+    "dev": "tsc --watch",
+    "dev:email-designer": "email dev --dir src/templates"
+  },
+  "dependencies": {
+    "@fulleststack/common": "workspace:^",
+    "@react-email/components": "^0.0.41",
+    "@react-email/tailwind": "1.0.5",
+    "react": "workspace:*",
+    "react-dom": "workspace:*",
+    "resend": "^4.5.1"
+  },
+  "devDependencies": {
+    "@fulleststack/eslint-config": "workspace:^",
+    "@types/node": "workspace:*",
+    "@types/react": "workspace:*",
+    "react-email": "4.0.14",
+    "typescript": "workspace:*"
+  }
+}

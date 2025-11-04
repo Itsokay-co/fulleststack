@@ -10,15 +10,15 @@
     "lint": "eslint .",
     "dev": "tsc --watch"
   },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "3.3.0"
+  },
   "devDependencies": {
     "@fulleststack/eslint-config": "workspace:^",
     "@types/node": "workspace:*",
     "@types/react": "workspace:*",
     "tailwindcss": "^3.4.17",
     "typescript": "workspace:*"
-  },
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "tailwind-merge": "3.3.0"
   }
 }

@@ -1,8 +1,9 @@
-import { useSession } from "@/lib/auth-client";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
+
+import { useSession } from "@/lib/auth-client";
 
 import "../global.css";
 
